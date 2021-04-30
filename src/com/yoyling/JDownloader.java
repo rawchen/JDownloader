@@ -32,21 +32,14 @@ public class JDownloader extends JFrame {
 	public JTextField numberOfThreadsTextField;
 	public JTextField refererTextField;
 	public JLabel tipLabel;
+	public JProgressBar progressBar;
+	public JButton startDownloadButton;
+	public JButton selectDirectoryButton;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
 		JDownloader frame = new JDownloader();
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowActivated(WindowEvent e) {
@@ -60,8 +53,8 @@ public class JDownloader extends JFrame {
 	 * Create the frame.
 	 */
 	public JDownloader() {
-		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+//		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("多线程下载器");
 		setBounds(100, 100, 600, 400);
 		setResizable(false);
@@ -81,7 +74,7 @@ public class JDownloader extends JFrame {
 		downloadUrlTextField.addFocusListener(new TextFieldHintListener(downloadUrlTextField,"键入下载链接"));
 		downloadUrlTextField.setForeground(Color.BLACK);
 		
-		JButton selectDirectoryButton = new JButton("...");
+		selectDirectoryButton = new JButton("...");
 		selectDirectoryButton.setBounds(459, 156, 90, 45);
 		contentPane.add(selectDirectoryButton);
 		
@@ -98,13 +91,14 @@ public class JDownloader extends JFrame {
 		numberOfThreadLabel.setBounds(480, 59, 50, 18);
 		contentPane.add(numberOfThreadLabel);
 		
-		JProgressBar progressBar = new JProgressBar();
-		progressBar.setValue(50);
+		progressBar = new JProgressBar();
+		progressBar.setValue(0);
 		progressBar.setBounds(0, 307, 594, 14);
 		contentPane.add(progressBar);
 		
-		tipLabel = new JLabel("进度：50%");
-		tipLabel.setBounds(261, 334, 72, 18);
+		tipLabel = new JLabel("当前无下载任务！");
+		tipLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		tipLabel.setBounds(49, 334, 500, 18);
 		contentPane.add(tipLabel);
 		
 		numberOfThreadsTextField = new JTextField();
@@ -126,7 +120,7 @@ public class JDownloader extends JFrame {
 		label.setBounds(184, 13, 231, 53);
 		contentPane.add(label);
 		
-		JButton startDownloadButton = new JButton("下载");
+		startDownloadButton = new JButton("下载");
 		startDownloadButton.setBounds(459, 231, 90, 45);
 		contentPane.add(startDownloadButton);
 		
@@ -160,13 +154,19 @@ public class JDownloader extends JFrame {
 		startDownloadButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new Downloader(downloadUrlTextField.getText(),Integer.parseInt(numberOfThreadsTextField.getText())).start();
+				if ("下载".equals(startDownloadButton.getText())) {
+					new Downloader(downloadUrlTextField.getText().trim(), Integer.parseInt(numberOfThreadsTextField.getText().trim())).start();
+				} else {
+
+				}
 			}
 		});
 
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e){
-				if (JOptionPane.showConfirmDialog(contentPane, "确认退出?","提示",JOptionPane.YES_NO_OPTION)==0) {
+				int t = JOptionPane.showConfirmDialog(contentPane, "确认退出?", "提示", JOptionPane.YES_NO_OPTION);
+				System.out.println(t);
+				if (t == 0) {
 					System.exit(0);
 				}
 			}
@@ -177,7 +177,7 @@ public class JDownloader extends JFrame {
 	}
 
 
-	public class Downloader {
+	public class Downloader extends Thread{
 
 		private static final int DEFAULT_THREAD_COUNT = 8;  // 默认线程数量
 		private AtomicBoolean canceled; // 取消状态，如果有一个子线程出现异常，则取消整个下载任务
@@ -199,16 +199,21 @@ public class JDownloader extends JFrame {
 			this.storageLocation = url.substring(url.lastIndexOf('/')+1);
 		}
 
-		public void start() {
+		@Override
+		public void run() {
 			System.out.println("* 开始下载：" + url);
 
 			if (-1 == (this.fileSize = getFileSize()))
 				return;
-			System.out.printf("* 文件大小：%.2fMB\n", fileSize / 1024.0 / 1024);
 
+			System.out.printf("* 文件大小：%.2fMB\n", fileSize / 1024.0 / 1024);
+//			tipLabel.setText(String.format("文件大小：%.2fMB",fileSize / 1024.0 / 1024));
+			selectDirectoryButton.setText(String.format("%.2fMB",fileSize / 1024.0 / 1024));
+			selectDirectoryButton.setEnabled(false);
+			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
 			try {
-				this.file = new DownloadFile(storageLocation, fileSize);
+				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + storageLocation, fileSize);
 				// 分配线程下载
 				dispatcher();
 				// 循环打印进度
@@ -245,47 +250,50 @@ public class JDownloader extends JFrame {
 			int i = 0;
 			long lastSize = 0; // 三秒前的下载量
 
-
-
 			while (!canceled.get() && downloadedSize < fileSize) {
-//            if (i++ % 4 == 3) { // 每3秒打印一次
-//				EventQueue.invokeLater(new Runnable() {
-//					public void run() {
-//						try {
-//							tipLabel.setText("123");
-//
-//						} catch (Exception e) {
-//							e.printStackTrace();
-//						}
-//					}
-//				});
-				tipLabel.setText(String.valueOf(downloadedSize / (double)fileSize * 100));
-				System.out.printf("下载进度：%.2f%%, 已下载：%.2fMB，当前速度：%.2fMB/s\n",
-						downloadedSize / (double)fileSize * 100 ,
+				progressBar.setValue((int)(downloadedSize / (double)fileSize * 100));
+				tipLabel.setText(String.format("下载进度：%.2f%%, 已下载：%.2fMB，当前速度：%.1fMB/s",
+						downloadedSize / (double)fileSize * 100,
 						downloadedSize / 1024.0 / 1024,
-						(downloadedSize - lastSize) / 1024.0 / 1024 * 4);
+						(downloadedSize - lastSize) / 1024.0 / 1024 * 8));
+//				System.out.printf("下载进度：%.2f%%, 已下载：%.2fMB，当前速度：%.2fMB/s\n",
+//						downloadedSize / (double)fileSize * 100 ,
+//						downloadedSize / 1024.0 / 1024,
+//						(downloadedSize - lastSize) / 1024.0 / 1024 * 4);
 				lastSize = downloadedSize;
 				i = 0;
 //            }
 				try {
-					Thread.sleep(250);
+					Thread.sleep(175);
 				} catch (Exception ignore) {}
 				downloadedSize = file.getWroteSize();
 			}
 			file.close();
 			if (canceled.get()) {
 				try {
-					Files.delete(Paths.get(storageLocation));
+					Files.delete(Paths.get(savedLocationTextField.getText().trim() + "/" + storageLocation));
 				} catch (IOException ignore) {
 				}
-				System.err.println("x 下载失败，任务已取消");
+				System.err.println("下载失败，任务已取消");
+				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消!","提示",JOptionPane.ERROR_MESSAGE);
 			} else {
 				try {
-					Files.delete(Paths.get(storageLocation));
-					Files.delete(Paths.get(storageLocation + ".log"));
-				} catch (IOException ignore) {
+//					Files.delete(Paths.get(storageLocation));
+				} catch (Exception ignore) {
 				}
-				System.out.println("* 下载成功，本次用时"+ (System.currentTimeMillis() - beginTime) / 1000 +"秒");
+//				System.out.println("* 下载成功，本次用时"+ (System.currentTimeMillis() - beginTime) / 1000 +"秒");
+				progressBar.setValue(100);
+				tipLabel.setText(String.format("下载完成，文件大小：%.2f MB，本次用时：%d 秒，平均速度：%.1f MB/S",fileSize/1024.0/1024,(System.currentTimeMillis() - beginTime) / 1000, fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
+				JOptionPane.showMessageDialog(contentPane, "下载完成，本次用时" + (System.currentTimeMillis() - beginTime) / 1000 +"秒","提示",JOptionPane.QUESTION_MESSAGE);
+				selectDirectoryButton.setText("...");
+				selectDirectoryButton.setEnabled(true);
+				startDownloadButton.setText("下载");
+				tipLabel.setText("当前无下载任务！");
+				downloadUrlTextField.setText("");
+				downloadUrlTextField.addFocusListener(new TextFieldHintListener(downloadUrlTextField,"键入下载链接"));
+				savedLocationTextField.requestFocus();
+				progressBar.setValue(0);
+
 			}
 		}
 
@@ -307,25 +315,37 @@ public class JDownloader extends JFrame {
 				String storageLocationName = "";
 				for(Object key : headers.keySet()){
 					String val = conn.getHeaderField((String) key);
-					System.out.println(key +"   "+ val);
-					if ("Content-Disposition".equals(key)) {
+//					System.out.println(key +"   "+ val);
+					if ("Content-Disposition".equals(key) || "content-Disposition".equals(key)) {
 						storageLocationName = val;
+						System.out.println(key+"  "+val);
+						break;
 					}
 //					System.out.println(key+"  "+val);
 				}
 
-				System.out.println("storageLocationName : " + storageLocationName);
-
-				Pattern pattern = Pattern.compile("filename.*?");
-				Matcher matcher = pattern.matcher(storageLocationName);
-				String dateStr;
-				if (matcher.find()) {
-					dateStr = matcher.group(0);
-					System.out.println("dateStr : " + dateStr);
+//				storageLocationName = "attachment;filename*=utf-8''Vienna%5Fin%5F4K%2Emp4;filename=Vienna_in_4K.mp4";
+				//流下载
+				if (!"".equals(storageLocationName)) {
+					//流下载
+					Pattern pattern = Pattern.compile("filename=\"*(.*)\"?");
+					Matcher matcher = pattern.matcher(storageLocationName);
+//					String dateStr;
+					if (matcher.find()) {
+//						dateStr = matcher.group(1);
+//						System.out.println(matcher.group(0));
+						System.out.println(matcher.group(1));
+						storageLocationName = matcher.group(1);
+//						System.out.println(matcher.group(2));
+//						System.out.println("dateStr : " + dateStr);
+					}
+					if (storageLocationName.endsWith("\"")) {
+						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
+					}
+					storageLocation = storageLocationName;
 				}
 
 
-				storageLocation = storageLocationName;
 
 				System.out.println("* 连接服务器成功");
 			} catch (MalformedURLException e) {
