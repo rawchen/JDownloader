@@ -15,16 +15,28 @@ class DownloadTask extends Thread {
     private AtomicBoolean canceled;
     private DownloadFile downloadFile;
     private int threadId;
-    private String referer = "https://yoyling.com/";
+    private String referer;
 
     DownloadTask(String url, long lowerBound, long upperBound, DownloadFile downloadFile,
-                        AtomicBoolean canceled, int threadID) {
+                 AtomicBoolean canceled, int threadID) {
         this.url = url;
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.canceled = canceled;
         this.downloadFile = downloadFile;
         this.threadId = threadID;
+        this.referer = "https://baidu.com/";
+    }
+
+    DownloadTask(String url, long lowerBound, long upperBound, DownloadFile downloadFile,
+                        AtomicBoolean canceled, int threadID, String referer) {
+        this.url = url;
+        this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
+        this.canceled = canceled;
+        this.downloadFile = downloadFile;
+        this.threadId = threadID;
+        this.referer = referer;
     }
 
     @Override
