@@ -142,6 +142,7 @@ public class JDownloader extends JFrame {
 				if(a == 0) {
 					String t = fileChooser.getSelectedFile().getPath();
 					savedLocationTextField.setText(t);
+					savedLocationTextField.setForeground(Color.BLACK);
 				}
 				
 			}
@@ -232,6 +233,12 @@ public class JDownloader extends JFrame {
 
 			} catch (IOException e) {
 				System.err.println("x 创建文件失败[" + e.getMessage() + "]");
+				startDownloadButton.setEnabled(true);
+				startDownloadButton.setText("下载");
+				selectDirectoryButton.setEnabled(true);
+				tipLabel.setText("当前无下载任务！");
+				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
+				selectDirectoryButton.setText("...");
 			}
 		}
 
