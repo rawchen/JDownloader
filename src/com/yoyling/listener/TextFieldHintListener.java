@@ -28,7 +28,7 @@ public class TextFieldHintListener implements FocusListener{
 		String temp = textField.getText();
 		if(temp.equals(hintText)) {
 			textField.setText("");
-			textField.setForeground(Color.BLACK);
+			textField.setForeground(Color.WHITE);
 		}
 	}
 

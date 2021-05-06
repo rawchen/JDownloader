@@ -2,10 +2,14 @@ package com.yoyling;
 
 import com.yoyling.listener.TextFieldHintListener;
 import com.yoyling.tools.ClipboardUtil;
+import com.yoyling.ui.CustomButton;
+import com.yoyling.ui.ColorResource;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -45,18 +49,26 @@ public class JDownloader extends JFrame {
 
 
 	public JDownloader() {
-
+//		setUndecorated(true);
+		UIManager.put("TextField.caretForeground", new ColorUIResource(Color.WHITE));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		setTitle("多线程下载器");
+		setTitle("JDownloader");
 		setBounds(100, 100, 600, 400);
 		setResizable(false);
+		setIconImage(Toolkit.getDefaultToolkit().getImage(JDownloader.class.getResource("/icons/favicon.png")));
 		contentPane = new JPanel();
-		contentPane.setBackground(Color.WHITE);
+		contentPane.setBackground(ColorResource.getDarkestBgColor());
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		setLocationRelativeTo(null);
+
+		try {
+			UIManager.setLookAndFeel(new MetalLookAndFeel());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		downloadUrlTextField = new JTextField();
 		downloadUrlTextField.setHorizontalAlignment(SwingConstants.CENTER);
@@ -66,10 +78,18 @@ public class JDownloader extends JFrame {
 		contentPane.add(downloadUrlTextField);
 		downloadUrlTextField.setColumns(10);
 		downloadUrlTextField.addFocusListener(new TextFieldHintListener(downloadUrlTextField,"键入下载链接"));
-		downloadUrlTextField.setForeground(Color.BLACK);
-		
-		selectDirectoryButton = new JButton("...");
+		downloadUrlTextField.setForeground(Color.WHITE);
+		downloadUrlTextField.setBackground(new Color(50, 50, 50));
+		downloadUrlTextField.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 1));
+
+		selectDirectoryButton = new CustomButton("...");
 		selectDirectoryButton.setBounds(459, 156, 90, 45);
+		selectDirectoryButton.setForeground(Color.white);
+		selectDirectoryButton.setBackground(ColorResource.getDarkBgColor());
+		selectDirectoryButton.setBorderPainted(false);
+		selectDirectoryButton.setFocusPainted(false);
+
+
 		contentPane.add(selectDirectoryButton);
 		
 		savedLocationTextField = new JTextField();
@@ -78,22 +98,31 @@ public class JDownloader extends JFrame {
 		savedLocationTextField.setBounds(49, 156, 396, 45);
 		savedLocationTextField.setFont(new Font("alias", Font.BOLD, 15));
 		savedLocationTextField.addFocusListener(new TextFieldHintListener(savedLocationTextField,"保存位置"));
-		savedLocationTextField.setForeground(Color.BLACK);
+		savedLocationTextField.setForeground(Color.WHITE);
+		savedLocationTextField.setBackground(new Color(50, 50, 50));
+		savedLocationTextField.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 1));
 		contentPane.add(savedLocationTextField);
+
+
 		
 		JLabel numberOfThreadLabel = new JLabel("线程数");
 		numberOfThreadLabel.setBounds(480, 59, 50, 18);
+		numberOfThreadLabel.setForeground(new Color(130, 130, 130));
 		contentPane.add(numberOfThreadLabel);
 		
 		progressBar = new JProgressBar();
 		progressBar.setValue(0);
-		progressBar.setBounds(0, 307, 594, 28);
+		progressBar.setBounds(0, 307, 594, 20);
 		progressBar.setStringPainted(true);
+		progressBar.setBackground(new Color(38, 38, 38));
+//		progressBar.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 0));
+		progressBar.setBorderPainted(false);
 		contentPane.add(progressBar);
 		
 		tipLabel = new JLabel("当前无下载任务！");
 		tipLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		tipLabel.setBounds(49, 334, 500, 18);
+		tipLabel.setForeground(new Color(199, 199, 199));
 		contentPane.add(tipLabel);
 		
 		numberOfThreadsTextField = new JTextField();
@@ -103,6 +132,11 @@ public class JDownloader extends JFrame {
 		numberOfThreadsTextField.setToolTipText("最好1-12线程内");
 		numberOfThreadsTextField.setColumns(10);
 		numberOfThreadsTextField.setBounds(459, 79, 90, 45);
+
+
+		numberOfThreadsTextField.setForeground(Color.WHITE);
+		numberOfThreadsTextField.setBackground(new Color(50, 50, 50));
+		numberOfThreadsTextField.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 1));
 		contentPane.add(numberOfThreadsTextField);
 		
 		File desktopDir = FileSystemView.getFileSystemView() .getHomeDirectory();
@@ -110,13 +144,17 @@ public class JDownloader extends JFrame {
 		savedLocationTextField.setText(desktopPath);
 		
 		JLabel label = new JLabel("多线程下载器");
-		label.setForeground(Color.DARK_GRAY);
+		label.setForeground(Color.WHITE);
 		label.setFont(new Font("微软雅黑", Font.BOLD, 35));
 		label.setBounds(184, 13, 231, 53);
 		contentPane.add(label);
 		
-		startDownloadButton = new JButton("下载");
+		startDownloadButton = new CustomButton("下载");
 		startDownloadButton.setBounds(459, 231, 90, 45);
+		startDownloadButton.setForeground(Color.white);
+		startDownloadButton.setBackground(ColorResource.getDarkBgColor());
+		startDownloadButton.setBorderPainted(false);
+		startDownloadButton.setFocusPainted(false);
 		contentPane.add(startDownloadButton);
 		
 		refererTextField = new JTextField();
@@ -128,6 +166,9 @@ public class JDownloader extends JFrame {
 		refererTextField.setBounds(49, 231, 396, 45);
 		refererTextField.setFont(new Font("alias", Font.BOLD, 15));
 		refererTextField.addFocusListener(new TextFieldHintListener(refererTextField,"Referer（可选）"));
+		refererTextField.setForeground(Color.GRAY);
+		refererTextField.setBackground(new Color(50, 50, 50));
+		refererTextField.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 1));
 		contentPane.add(refererTextField);
 		
 		JFileChooser fileChooser = new JFileChooser();
@@ -183,9 +224,12 @@ public class JDownloader extends JFrame {
 				}
 			}
 		});
-		
-		downloadUrlTextField.setText(ClipboardUtil.getClipboardText());
 
+		if (!"".equals(ClipboardUtil.getClipboardText())) {
+			downloadUrlTextField.setText(ClipboardUtil.getClipboardText());
+		} else {
+			downloadUrlTextField.setForeground(Color.gray);
+		}
 	}
 
 
@@ -219,7 +263,7 @@ public class JDownloader extends JFrame {
 				return;
 
 			System.out.printf("* 文件大小：%.2fMB\n", fileSize / 1024.0 / 1024);
-			selectDirectoryButton.setText(String.format("%.2fMB",fileSize / 1024.0 / 1024));
+			selectDirectoryButton.setText(String.format("%.0fMB",fileSize / 1024.0 / 1024));
 			selectDirectoryButton.setEnabled(false);
 			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
