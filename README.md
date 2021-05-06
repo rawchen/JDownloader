@@ -18,12 +18,12 @@
 
 一个 **776 MB** 的 OneDrive 视频文件。
 
-正常谷歌浏览器下载需要 **7分20秒**，平均 **1.76M/s**；多线程需要 **90 秒**，平均 **8.6M/s**，5倍下载效率。
+正常谷歌浏览器下载需要 **7分20秒**，平均 **1.76M/s**；多线程需要 **96 秒**，平均 **8.1M/s**，5倍下载效率。
 
 
 
-![01](https://i.loli.net/2021/05/06/izdtxVTgvR6CMba.png)
+![01](https://i.loli.net/2021/05/06/3qcIUHoD2lVtWry.png)
 
-![02](https://i.loli.net/2021/05/06/PEbLrlXsCWpJxuI.png)
+![02](https://i.loli.net/2021/05/06/6Jk8MPsWfRxw9cI.png)
 
-![03](https://i.loli.net/2021/05/06/1xQpaCfDFSLeN2l.png)
+![03](https://i.loli.net/2021/05/06/tfE7uGXoqjdYpPe.png)
