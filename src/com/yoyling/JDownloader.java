@@ -2,6 +2,7 @@ package com.yoyling;
 
 import com.yoyling.listener.TextFieldHintListener;
 import com.yoyling.tools.ClipboardUtil;
+import com.yoyling.tools.UrlUtil;
 import com.yoyling.ui.CustomButton;
 import com.yoyling.ui.ColorResource;
 
@@ -259,8 +260,11 @@ public class JDownloader extends JFrame {
 		public void run() {
 			System.out.println("* 开始下载：" + url);
 			startDownloadButton.setEnabled(false);
-			if (-1 == (this.fileSize = getFileSize()))
+			if ((this.fileSize = getFileSize()) <= 0) {
+				System.err.println("下载失败，任务已取消！");
+				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				return;
+			}
 
 			System.out.printf("* 文件大小：%.2fMB\n", fileSize / 1024.0 / 1024);
 			selectDirectoryButton.setText(String.format("%.0fMB",fileSize / 1024.0 / 1024));
@@ -268,7 +272,8 @@ public class JDownloader extends JFrame {
 			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
 			try {
-				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + storageLocation, fileSize);
+				storageLocation = UrlUtil.getURLDecoderString(storageLocation);
+				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + this.storageLocation, fileSize);
 				// 分配线程下载
 				dispatcher();
 				// 循环打印进度
@@ -388,7 +393,6 @@ public class JDownloader extends JFrame {
 //					System.out.println(key +"   "+ val);
 					if ("Content-Disposition".equals(key) || "content-Disposition".equals(key)) {
 						storageLocationName = val;
-						System.out.println(key+"  "+val);
 						break;
 					}
 				}
