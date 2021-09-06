@@ -384,7 +384,10 @@ public class JDownloader extends JFrame {
 				conn = (HttpURLConnection)new URL(url).openConnection();
 				conn.setConnectTimeout(3000);
 				conn.setRequestMethod("HEAD");
+				conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.8) Firefox/3.6.8");
 				conn.connect();
+
+				System.out.println("* 响应码: " + conn.getResponseCode());
 				Map headers = conn.getHeaderFields();
 
 				String storageLocationName = "";
@@ -403,11 +406,11 @@ public class JDownloader extends JFrame {
 					Pattern pattern = Pattern.compile("filename=\"*(.*)\"?");
 					Matcher matcher = pattern.matcher(storageLocationName);
 					if (matcher.find()) {
-						System.out.println(matcher.group(1));
 						storageLocationName = matcher.group(1);
 					}
 					if (storageLocationName.endsWith("\"")) {
 						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
+						System.out.println("* 文件名: " + storageLocationName);
 					}
 					storageLocation = storageLocationName;
 				}
