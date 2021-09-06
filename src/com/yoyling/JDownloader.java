@@ -16,9 +16,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -330,7 +328,7 @@ public class JDownloader extends JFrame {
 				progressBar.setValue((int)(downloadedSize / (double)fileSize * 100));
 				progressBar.setString(String.format("%.2f %%", downloadedSize / (double)fileSize * 100));
 				s = "已下载：" + ConvertUtil.converFileSize(downloadedSize);
-				tipLabel.setText(s + String.format("   当前速度：%.1f MB/s", ((downloadedSize - lastSize) / 1024.0 / 1024)));
+				tipLabel.setText(s + String.format("   当前速度：%.1f M/s", ((downloadedSize - lastSize) / 1024.0 / 1024)));
 				lastSize = downloadedSize;
 				try {
 					Thread.sleep(1000);
@@ -356,7 +354,7 @@ public class JDownloader extends JFrame {
 				progressBar.setValue(100);
 				String s1 = "大小：" + ConvertUtil.converFileSize(fileSize) + "       ";
 				String s2 = "用时：" + ConvertUtil.millisToStringShort(System.currentTimeMillis() - beginTime) + "       ";
-				tipLabel.setText(s1 + s2 + String.format("均速：%.1f MB/s",fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
+				tipLabel.setText(s1 + s2 + String.format("均速：%.1f M/s",fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
 				selectDirectoryButton.setText("...");
 				selectDirectoryButton.setEnabled(true);
 				startDownloadButton.setText("下载");

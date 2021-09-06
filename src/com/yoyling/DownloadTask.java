@@ -2,6 +2,8 @@ package com.yoyling;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;

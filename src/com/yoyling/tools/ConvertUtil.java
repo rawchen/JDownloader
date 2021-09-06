@@ -17,13 +17,13 @@ public class ConvertUtil {
 		DecimalFormat format = new DecimalFormat("###.00");
 		if (size >= 1024 * 1024 * 1024) {
 			double i = (size / (1024.0 * 1024.0 * 1024.0));
-			bytes.append(format.format(i)).append(" GB");
+			bytes.append(format.format(i)).append(" G");
 		} else if (size >= 1024 * 1024) {
 			double i = (size / (1024.0 * 1024.0));
-			bytes.append(format.format(i)).append(" MB");
+			bytes.append(format.format(i)).append(" M");
 		} else if (size >= 1024) {
 			double i = (size / (1024.0));
-			bytes.append(format.format(i)).append(" KB");
+			bytes.append(format.format(i)).append(" K");
 		} else if (size < 1024) {
 			if (size <= 0) {
 				bytes.append("0B");
