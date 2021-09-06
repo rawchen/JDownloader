@@ -2,6 +2,7 @@ package com.yoyling;
 
 import com.yoyling.listener.TextFieldHintListener;
 import com.yoyling.tools.ClipboardUtil;
+import com.yoyling.tools.ConvertUtil;
 import com.yoyling.tools.UrlUtil;
 import com.yoyling.ui.CustomButton;
 import com.yoyling.ui.ColorResource;
@@ -116,7 +117,6 @@ public class JDownloader extends JFrame {
 		progressBar.setBounds(0, 307, 594, 20);
 		progressBar.setStringPainted(true);
 		progressBar.setBackground(new Color(38, 38, 38));
-//		progressBar.setBorder(BorderFactory.createLineBorder(new Color(82, 82, 82), 0));
 		progressBar.setBorderPainted(false);
 		contentPane.add(progressBar);
 		
@@ -144,10 +144,10 @@ public class JDownloader extends JFrame {
 		String desktopPath = desktopDir.getAbsolutePath();
 		savedLocationTextField.setText(desktopPath);
 		
-		JLabel label = new JLabel("多线程下载器");
+		JLabel label = new JLabel("多 线 程 下 载 器");
 		label.setForeground(Color.WHITE);
 		label.setFont(new Font("微软雅黑", Font.BOLD, 35));
-		label.setBounds(184, 13, 231, 53);
+		label.setBounds(165, 13, 300, 53);
 		contentPane.add(label);
 		
 		startDownloadButton = new CustomButton("下载");
@@ -192,10 +192,14 @@ public class JDownloader extends JFrame {
 		startDownloadButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if ("下载".equals(startDownloadButton.getText())) {
+				if ("下载".equals(startDownloadButton.getText()) && !"".equals(downloadUrlTextField.getText().trim())) {
 					new Downloader(downloadUrlTextField.getText().trim(), Integer.parseInt(numberOfThreadsTextField.getText().trim())).start();
 				} else {
-					System.exit(0);
+					if ("取消".equals(startDownloadButton.getText())) {
+						System.exit(0);
+					} else {
+						JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			}
 		});
@@ -260,19 +264,20 @@ public class JDownloader extends JFrame {
 		public void run() {
 			System.out.println("* 开始下载：" + url);
 			startDownloadButton.setEnabled(false);
+			startDownloadButton.setText("计算中...");
 			if ((this.fileSize = getFileSize()) <= 0) {
 				System.err.println("下载失败，任务已取消！");
+				startDownloadButton.setText("下载");
 				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 
-			System.out.printf("* 文件大小：%.2fMB\n", fileSize / 1024.0 / 1024);
-			selectDirectoryButton.setText(String.format("%.0fMB",fileSize / 1024.0 / 1024));
+			System.out.println("* 文件大小：" + ConvertUtil.converFileSize(fileSize));
+			selectDirectoryButton.setText(ConvertUtil.converFileSize(fileSize));
 			selectDirectoryButton.setEnabled(false);
 			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
 			try {
-				storageLocation = UrlUtil.getURLDecoderString(storageLocation);
 				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + this.storageLocation, fileSize);
 				// 分配线程下载
 				dispatcher();
@@ -320,20 +325,15 @@ public class JDownloader extends JFrame {
 			long downloadedSize = file.getWroteSize();
 			int i = 0;
 			long lastSize = 0; // 三秒前的下载量
-
+			String s = "";
 			while (!canceled.get() && downloadedSize < fileSize) {
 				progressBar.setValue((int)(downloadedSize / (double)fileSize * 100));
-				progressBar.setString(String.format("%.1f %%", downloadedSize / (double)fileSize * 100));
-				tipLabel.setText(String.format("已下载：%.2f MB   当前速度：%.1f MB/s",
-						downloadedSize / 1024.0 / 1024,
-						(downloadedSize - lastSize) / 1024.0 / 1024 * 8));
-//				System.out.printf("下载进度：%.2f%%, 已下载：%.2fMB，当前速度：%.2fMB/s\n",
-//						downloadedSize / (double)fileSize * 100 ,
-//						downloadedSize / 1024.0 / 1024,
-//						(downloadedSize - lastSize) / 1024.0 / 1024 * 4);
+				progressBar.setString(String.format("%.2f %%", downloadedSize / (double)fileSize * 100));
+				s = "已下载：" + ConvertUtil.converFileSize(downloadedSize);
+				tipLabel.setText(s + String.format("   当前速度：%.1f MB/s", ((downloadedSize - lastSize) / 1024.0 / 1024)));
 				lastSize = downloadedSize;
 				try {
-					Thread.sleep(175);
+					Thread.sleep(1000);
 				} catch (Exception e) {
 					System.out.println(e);
 				}
@@ -353,9 +353,10 @@ public class JDownloader extends JFrame {
 				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				selectDirectoryButton.setText("...");
 			} else {
-//				System.out.println("* 下载成功，本次用时"+ (System.currentTimeMillis() - beginTime) / 1000 +"秒");
 				progressBar.setValue(100);
-				tipLabel.setText(String.format("下载完成，文件大小：%.2f MB，本次用时：%d 秒，平均速度：%.1f MB/S",fileSize/1024.0/1024,(System.currentTimeMillis() - beginTime) / 1000, fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
+				String s1 = "大小：" + ConvertUtil.converFileSize(fileSize) + "       ";
+				String s2 = "用时：" + ConvertUtil.millisToStringShort(System.currentTimeMillis() - beginTime) + "       ";
+				tipLabel.setText(s1 + s2 + String.format("均速：%.1f MB/s",fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
 				selectDirectoryButton.setText("...");
 				selectDirectoryButton.setEnabled(true);
 				startDownloadButton.setText("下载");
@@ -366,7 +367,7 @@ public class JDownloader extends JFrame {
 				progressBar.setString("0%");
 				refererTextField.setText("");
 				refererTextField.addFocusListener(new TextFieldHintListener(refererTextField,"Referer（可选）"));
-				JOptionPane.showMessageDialog(contentPane, "下载完成，本次用时" + (System.currentTimeMillis() - beginTime) / 1000 +"秒","提示",JOptionPane.QUESTION_MESSAGE);
+				JOptionPane.showMessageDialog(contentPane, "下载完成，用时" + ConvertUtil.millisToStringShort(System.currentTimeMillis() - beginTime),"提示",JOptionPane.QUESTION_MESSAGE);
 				tipLabel.setText("当前无下载任务！");
 
 			}
@@ -410,6 +411,7 @@ public class JDownloader extends JFrame {
 					}
 					if (storageLocationName.endsWith("\"")) {
 						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
+						storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
 						System.out.println("* 文件名: " + storageLocationName);
 					}
 					storageLocation = storageLocationName;
@@ -419,6 +421,7 @@ public class JDownloader extends JFrame {
 			} catch (MalformedURLException e) {
 				JOptionPane.showMessageDialog(contentPane, "URL错误!","提示",JOptionPane.ERROR_MESSAGE);
 				startDownloadButton.setEnabled(true);
+				startDownloadButton.setText("下载");
 				throw new RuntimeException("URL错误");
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(contentPane, "连接服务器失败!","提示",JOptionPane.ERROR_MESSAGE);
