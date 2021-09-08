@@ -51,6 +51,9 @@ class DownloadTask extends Thread {
 
             int len;
             while (!canceled.get() && lowerBound <= upperBound) {
+                if (JDownloader.cancelDownload) {
+                    input.close();
+                }
                 buffer.clear();
                 len = input.read(buffer);
                 downloadFile.write(lowerBound, buffer, threadId, upperBound);

@@ -26,22 +26,25 @@ import java.util.regex.Pattern;
 
 public class JDownloader extends JFrame {
 
-	public JPanel contentPane;
-	public JTextField downloadUrlTextField;
+	public static JPanel contentPane;
+	public static JTextField downloadUrlTextField;
 	public static JTextField savedLocationTextField;
 	public JTextField numberOfThreadsTextField;
-	public JTextField refererTextField;
-	public JLabel tipLabel;
-	public JProgressBar progressBar;
-	public JButton startDownloadButton;
-	public JButton selectDirectoryButton;
+	public static JTextField refererTextField;
+	public static JLabel tipLabel;
+	public static JProgressBar progressBar;
+	public static JButton startDownloadButton;
+	public static JButton selectDirectoryButton;
+
+	public static boolean cancelDownload = false;
 
 
 	public static void main(String[] args) {
 		JDownloader frame = new JDownloader();
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowActivated(WindowEvent e) {
-				savedLocationTextField.requestFocusInWindow();
+				downloadUrlTextField.requestFocusInWindow();
+				downloadUrlTextField.setCaretPosition(downloadUrlTextField.getText().length());
 			}
 		});
 		frame.setVisible(true);
@@ -181,7 +184,7 @@ public class JDownloader extends JFrame {
 				if(a == 0) {
 					String t = fileChooser.getSelectedFile().getPath();
 					savedLocationTextField.setText(t);
-					savedLocationTextField.setForeground(Color.BLACK);
+					savedLocationTextField.setForeground(Color.white);
 				}
 				
 			}
@@ -194,7 +197,19 @@ public class JDownloader extends JFrame {
 					new Downloader(downloadUrlTextField.getText().trim(), Integer.parseInt(numberOfThreadsTextField.getText().trim())).start();
 				} else {
 					if ("取消".equals(startDownloadButton.getText())) {
-						System.exit(0);
+						String s = savedLocationTextField.getText().trim() + File.separator + Downloader.storageLocation;
+						cancelDownload = true;
+						try {
+							if (new File(s).exists()) {
+								new File(s).delete();
+							}
+						} catch (Exception ex) {
+							System.err.println("删除文件出错！");
+						}
+						System.out.println(Downloader.storageLocation);
+
+//						System.exit(0);
+//						Files.delete(Paths.get(savedLocationTextField.getText().trim() + "/" + Downloader.storageLocation));
 					} else {
 						JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 					}
@@ -236,12 +251,12 @@ public class JDownloader extends JFrame {
 	}
 
 
-	public class Downloader extends Thread{
+	public static class Downloader extends Thread{
 
 		private static final int DEFAULT_THREAD_COUNT = 8;  // 默认线程数量
 		private AtomicBoolean canceled; // 取消状态，如果有一个子线程出现异常，则取消整个下载任务
 		private DownloadFile file; // 下载的文件对象
-		private String storageLocation;
+		private static String storageLocation;
 		private final int threadCount; // 线程数量
 		private long fileSize; // 文件大小
 		private final String url;
@@ -261,11 +276,13 @@ public class JDownloader extends JFrame {
 		@Override
 		public void run() {
 			System.out.println("* 开始下载：" + url);
+			savedLocationTextField.setEnabled(false);
 			startDownloadButton.setEnabled(false);
 			startDownloadButton.setText("计算中...");
 			if ((this.fileSize = getFileSize()) <= 0) {
 				System.err.println("下载失败，任务已取消！");
 				startDownloadButton.setText("下载");
+				savedLocationTextField.setEnabled(true);
 				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				return;
 			}
@@ -276,17 +293,27 @@ public class JDownloader extends JFrame {
 			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
 			try {
+				File saveDir = new File(savedLocationTextField.getText().trim() + "/");
+				if (!saveDir.exists()) {
+					if (saveDir.mkdir()) {
+						System.out.println("* 创建自定义目录成功！");
+					}else {
+						System.out.println("* 创建自定义目录失败！");
+					}
+				}
 				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + this.storageLocation, fileSize);
+
 				// 分配线程下载
 				dispatcher();
 				// 循环打印进度
 				printDownloadProgress();
 
-			} catch (IOException e) {
+			} catch (Exception e) {
 				System.err.println("x 创建文件失败[" + e.getMessage() + "]");
 				startDownloadButton.setEnabled(true);
 				startDownloadButton.setText("下载");
 				selectDirectoryButton.setEnabled(true);
+				savedLocationTextField.setEnabled(true);
 				tipLabel.setText("当前无下载任务！");
 				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				selectDirectoryButton.setText("...");
@@ -344,7 +371,11 @@ public class JDownloader extends JFrame {
 				} catch (IOException ignore) {
 				}
 				System.err.println("下载失败，任务已取消！");
+				progressBar.setValue(0);
+				progressBar.setString("0 %");
+				cancelDownload = false;
 				startDownloadButton.setEnabled(true);
+				savedLocationTextField.setEnabled(true);
 				startDownloadButton.setText("下载");
 				selectDirectoryButton.setEnabled(true);
 				tipLabel.setText("当前无下载任务！");
@@ -357,12 +388,13 @@ public class JDownloader extends JFrame {
 				tipLabel.setText(s1 + s2 + String.format("均速：%.1f M/s",fileSize/1024.0/1024/((System.currentTimeMillis() - beginTime) / 1000)));
 				selectDirectoryButton.setText("...");
 				selectDirectoryButton.setEnabled(true);
+				savedLocationTextField.setEnabled(true);
 				startDownloadButton.setText("下载");
 				downloadUrlTextField.setText("");
 				downloadUrlTextField.addFocusListener(new TextFieldHintListener(downloadUrlTextField,"键入下载链接"));
 				savedLocationTextField.requestFocus();
 				progressBar.setValue(0);
-				progressBar.setString("0%");
+				progressBar.setString("0 %");
 				refererTextField.setText("");
 				refererTextField.addFocusListener(new TextFieldHintListener(refererTextField,"Referer（可选）"));
 				JOptionPane.showMessageDialog(contentPane, "下载完成，用时" + ConvertUtil.millisToStringShort(System.currentTimeMillis() - beginTime),"提示",JOptionPane.QUESTION_MESSAGE);
@@ -419,6 +451,7 @@ public class JDownloader extends JFrame {
 			} catch (MalformedURLException e) {
 				JOptionPane.showMessageDialog(contentPane, "URL错误!","提示",JOptionPane.ERROR_MESSAGE);
 				startDownloadButton.setEnabled(true);
+				savedLocationTextField.setEnabled(true);
 				startDownloadButton.setText("下载");
 				throw new RuntimeException("URL错误");
 			} catch (IOException e) {
