@@ -282,6 +282,7 @@ public class JDownloader extends JFrame {
 			if ((this.fileSize = getFileSize()) <= 0) {
 				System.err.println("下载失败，任务已取消！");
 				startDownloadButton.setText("下载");
+				startDownloadButton.setEnabled(true);
 				savedLocationTextField.setEnabled(true);
 				JOptionPane.showMessageDialog(contentPane, "下载失败，任务已取消！","提示",JOptionPane.ERROR_MESSAGE);
 				return;
@@ -455,9 +456,10 @@ public class JDownloader extends JFrame {
 				startDownloadButton.setText("下载");
 				throw new RuntimeException("URL错误");
 			} catch (IOException e) {
+				startDownloadButton.setEnabled(true);
+				savedLocationTextField.setEnabled(true);
 				JOptionPane.showMessageDialog(contentPane, "连接服务器失败!","提示",JOptionPane.ERROR_MESSAGE);
 				System.err.println("x 连接服务器失败["+ e.getMessage() +"]");
-				return -1;
 			}
 			return conn.getContentLengthLong();
 		}
