@@ -279,7 +279,17 @@ public class JDownloader extends JFrame {
 			savedLocationTextField.setEnabled(false);
 			startDownloadButton.setEnabled(false);
 			startDownloadButton.setText("计算中...");
-			if ((this.fileSize = getFileSize()) <= 0) {
+
+			long fileSize = getFileSize();
+
+			if (fileSize == -1) {
+				startDownloadButton.setEnabled(true);
+				startDownloadButton.setText("下载");
+				savedLocationTextField.setEnabled(true);
+				JOptionPane.showMessageDialog(contentPane, "连接服务器失败！","提示",JOptionPane.ERROR_MESSAGE);
+				System.err.println("x 连接服务器失败！");
+				return;
+			} else if (fileSize == 0) {
 				System.err.println("下载失败，任务已取消！");
 				startDownloadButton.setText("下载");
 				startDownloadButton.setEnabled(true);
@@ -288,8 +298,8 @@ public class JDownloader extends JFrame {
 				return;
 			}
 
-			System.out.println("* 文件大小：" + ConvertUtil.converFileSize(fileSize));
-			selectDirectoryButton.setText(ConvertUtil.converFileSize(fileSize));
+			System.out.println("* 文件大小：" + ConvertUtil.converFileSize(this.fileSize));
+			selectDirectoryButton.setText(ConvertUtil.converFileSize(this.fileSize));
 			selectDirectoryButton.setEnabled(false);
 			startDownloadButton.setText("取消");
 			this.beginTime = System.currentTimeMillis();
@@ -302,7 +312,7 @@ public class JDownloader extends JFrame {
 						System.out.println("* 创建自定义目录失败！");
 					}
 				}
-				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + this.storageLocation, fileSize);
+				this.file = new DownloadFile(savedLocationTextField.getText().trim() + "/" + this.storageLocation, this.fileSize);
 
 				// 分配线程下载
 				dispatcher();
@@ -456,10 +466,7 @@ public class JDownloader extends JFrame {
 				startDownloadButton.setText("下载");
 				throw new RuntimeException("URL错误");
 			} catch (IOException e) {
-				startDownloadButton.setEnabled(true);
-				savedLocationTextField.setEnabled(true);
-				JOptionPane.showMessageDialog(contentPane, "连接服务器失败!","提示",JOptionPane.ERROR_MESSAGE);
-				System.err.println("x 连接服务器失败["+ e.getMessage() +"]");
+				return -1;
 			}
 			return conn.getContentLengthLong();
 		}
