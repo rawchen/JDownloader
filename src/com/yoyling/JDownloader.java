@@ -280,7 +280,7 @@ public class JDownloader extends JFrame {
 			startDownloadButton.setEnabled(false);
 			startDownloadButton.setText("计算中...");
 
-			long fileSize = getFileSize();
+			this.fileSize = getFileSize();
 
 			if (fileSize == -1) {
 				startDownloadButton.setEnabled(true);
@@ -451,9 +451,12 @@ public class JDownloader extends JFrame {
 						storageLocationName = matcher.group(1);
 					}
 
-					storageLocationName = storageLocationName.replaceAll("\"", "");
-					storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
-					System.out.println("* 文件名: " + storageLocationName);
+//					storageLocationName = storageLocationName.replaceAll("\"", "");
+					if (storageLocationName.endsWith("\"")) {
+						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
+						storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
+						System.out.println("* 文件名: " + storageLocationName);
+					}
 					storageLocation = storageLocationName;
 				}
 				startDownloadButton.setEnabled(true);
