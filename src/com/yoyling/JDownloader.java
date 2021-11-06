@@ -450,11 +450,10 @@ public class JDownloader extends JFrame {
 					if (matcher.find()) {
 						storageLocationName = matcher.group(1);
 					}
-					if (storageLocationName.endsWith("\"")) {
-						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
-						storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
-						System.out.println("* 文件名: " + storageLocationName);
-					}
+
+					storageLocationName = storageLocationName.replaceAll("\"", "");
+					storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
+					System.out.println("* 文件名: " + storageLocationName);
 					storageLocation = storageLocationName;
 				}
 				startDownloadButton.setEnabled(true);
