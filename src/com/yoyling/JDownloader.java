@@ -17,6 +17,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -320,6 +321,7 @@ public class JDownloader extends JFrame {
 				printDownloadProgress();
 
 			} catch (Exception e) {
+				e.printStackTrace();
 				System.err.println("x 创建文件失败[" + e.getMessage() + "]");
 				startDownloadButton.setEnabled(true);
 				startDownloadButton.setText("下载");
@@ -345,7 +347,7 @@ public class JDownloader extends JFrame {
 				// fileSize-1 !!!!! fu.ck，找了一下午的错
 				upperBound = (i == threadCount - 1) ? fileSize-1 : lowerBound + blockSize;
 
-				if ("".equals(refererTextField.getText().trim())) {
+				if ("".equals(refererTextField.getText().trim()) || "Referer（可选）".equals(refererTextField.getText().trim())) {
 					new DownloadTask(url, lowerBound, upperBound, file, canceled, threadID).start();
 				} else {
 					new DownloadTask(url, lowerBound, upperBound, file, canceled, threadID, refererTextField.getText().trim()).start();
@@ -425,40 +427,48 @@ public class JDownloader extends JFrame {
 			try {
 				conn = (HttpURLConnection)new URL(url).openConnection();
 				conn.setConnectTimeout(3000);
-				conn.setRequestMethod("HEAD");
-				conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.8) Firefox/3.6.8");
+				conn.setRequestMethod("GET");
+				conn.setInstanceFollowRedirects(true);
+				conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
 				conn.connect();
 
 				System.out.println("* 响应码: " + conn.getResponseCode());
-				Map headers = conn.getHeaderFields();
+//				Map headers = conn.getHeaderFields();
+				String contentDisposition = "";
+				contentDisposition = conn.getHeaderField("Content-Disposition");
+				System.out.println(contentDisposition);
+				if (contentDisposition == null || "".equals(contentDisposition)) {
+					contentDisposition = conn.getHeaderField("content-Disposition");
+				}
+				System.out.println(contentDisposition);
 
 				String storageLocationName = "";
-				for(Object key : headers.keySet()){
-					String val = conn.getHeaderField((String) key);
-//					System.out.println(key +"   "+ val);
-					if ("Content-Disposition".equals(key) || "content-Disposition".equals(key)) {
-						storageLocationName = val;
-						break;
-					}
-				}
-
-				//流下载
-				if (!"".equals(storageLocationName)) {
+				//直链下载
+				if (contentDisposition != null && !"".equals(contentDisposition)) {
 					//流下载
-					Pattern pattern = Pattern.compile("filename=\"*(.*)\"?");
-					Matcher matcher = pattern.matcher(storageLocationName);
-					if (matcher.find()) {
-						storageLocationName = matcher.group(1);
+					if (contentDisposition.contains("filename=")) {
+						storageLocationName = URLDecoder.decode(contentDisposition.substring(
+								contentDisposition.indexOf("filename=") + 9), "UTF-8");
+					} else if (contentDisposition.contains("filename*=UTF-8''")) {
+						storageLocationName = URLDecoder.decode(contentDisposition.substring(
+								contentDisposition.indexOf("filename*=UTF-8''") + 17), "UTF-8");
+						System.out.println(storageLocationName);
+					} else if (contentDisposition.contains("filename*=")) {
+						storageLocationName = URLDecoder.decode(contentDisposition.substring(
+								contentDisposition.indexOf("filename*=") + 10), "UTF-8");
 					}
-
-//					storageLocationName = storageLocationName.replaceAll("\"", "");
-					if (storageLocationName.endsWith("\"")) {
-						storageLocationName = storageLocationName.substring(0,storageLocationName.length()-1);
-						storageLocationName = UrlUtil.getURLDecoderString(storageLocationName);
-						System.out.println("* 文件名: " + storageLocationName);
-					}
+					storageLocationName = storageLocationName.replaceAll("\"", "");
+					storageLocationName = storageLocationName.replaceAll("'", "");
 					storageLocation = storageLocationName;
+
+//					Pattern pattern = Pattern.compile("filename=\"*(.*)\"?");
+//					Matcher matcher = pattern.matcher(storageLocationName);
+//					if (matcher.find()) {
+//						storageLocationName = matcher.group(1);
+//					}
 				}
+
+				System.out.println("* 文件名: " + storageLocation);
 				startDownloadButton.setEnabled(true);
 				System.out.println("* 连接服务器成功");
 			} catch (MalformedURLException e) {
