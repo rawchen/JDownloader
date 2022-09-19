@@ -27,7 +27,7 @@ class DownloadTask extends Thread {
         this.canceled = canceled;
         this.downloadFile = downloadFile;
         this.threadId = threadID;
-        this.referer = "https://baidu.com/";
+        this.referer = "";
     }
 
     DownloadTask(String url, long lowerBound, long upperBound, DownloadFile downloadFile,
@@ -87,6 +87,7 @@ class DownloadTask extends Thread {
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Referer",referer);
         conn.setRequestProperty("Range", "bytes=" + lowerBound + "-" + upperBound);
+        conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
 //        System.out.println("thread_"+ threadId +": " + lowerBound + "-" + upperBound);
         conn.connect();
 
