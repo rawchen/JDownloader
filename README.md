@@ -5,8 +5,7 @@
 
 ## 使用
 
-* Windows下载安装 JRE 8 或 JDK 8 及以上版本，下载ZIP解压运行 **JDownloader.bat** 即可打开该软件。
-* 如果喜欢敲命令，直接在项目目录 `java -jar JDownloader.jar` 使用该软件。
+* Windows下载安装 JRE 8 或 JDK 8 及以上版本环境，下载项目ZIP解压运行 **JDownloader.jar** 即可打开该软件。
 
 
 ## 功能
